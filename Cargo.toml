@@ -1,0 +1,30 @@
+[package]
+name = "earshot"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+description = "Microphone capture and local speech recognition for GNOME apps"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+# GLib and GIO, and no GTK. Nothing here draws anything: the microphone is a
+# subprocess read from the main loop and the models answer through
+# `glib::idle_add_once`. Both versions must match what the consuming apps get
+# through gtk4-rs 0.11 — a second `glib` in the tree would make
+# `glib::InputStream` from this crate a different type from theirs — so these
+# are the versions gtk4 0.11 and libadwaita 0.9 resolve to.
+glib = "0.22"
+gio = { version = "0.22", features = ["v2_80"] }
+
+# Speech recognition. Wraps ONNX Runtime around NVIDIA's Parakeet and Nemotron
+# models: one crate covers both the accurate batch pass and the cache-aware
+# streaming pass, so there is one runtime to build and one model layout to ship.
+# `ort` is a release candidate with breaking changes between them, so the
+# version is pinned through this crate rather than depended on directly. It
+# statically links an ONNX Runtime that `ort-sys` downloads at build time, so
+# the first build on a machine needs the network and about 100 MB of
+# `~/.cache/ort.pyke.io`.
+parakeet-rs = "0.3.7"
+
+[dev-dependencies]
+tempfile = "3"
